@@ -1,0 +1,29 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+char*r_comp(char*seq, int len)
+{
+	/*先说个问题，这程序没有检查机制，完全依赖于之前程序给的length参数没有问题*/
+	char*re = (char*)malloc(len + 1);
+	char*ori = (char*)malloc(len + 1);
+	strncpy(ori, seq, len);
+	*(ori + len) = '\0';
+	*(re + len) = '\0';
+	int loop_c = 0;
+	char _tmp = '\0';
+	for (loop_c = 0; loop_c < len; loop_c++)
+	{
+		_tmp = *(ori + loop_c);
+		switch (_tmp)
+		{
+		case'A':_tmp = 'T'; break;
+		case'T':_tmp = 'A'; break;
+		case'C':_tmp = 'G'; break;
+		case'G':_tmp = 'C'; break;
+		default:printf("unexpected char%c\n", _tmp);
+		}
+		*(re + len - loop_c - 1) = _tmp;
+	}
+	return re;
+}
