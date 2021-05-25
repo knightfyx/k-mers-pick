@@ -43,4 +43,4 @@ int seq_process(FILE*out, Fas*head)
 		getc(stdin);
 	}
 	return count;
-}
+} 
