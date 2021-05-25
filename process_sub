@@ -1,0 +1,114 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+/*最终处理
+只接收单个序列
+如果调用多个需要循环调用*/
+int process_sub(FILE*out, char*name, char*seq,int k_mer)
+{
+	fputs(name, out); 
+	fputs("\r\n", out);
+	struct Krec
+	{
+		char*k_m;																				//注意k_mer已经被用了
+		int k_count;
+	};
+	char *seq_ing = seq, *_tmp = (char*)malloc(k_mer + 1);						//seq_p:我感觉两个最好别混，方便每次从头开始，_ing一律表示正在使用的指针
+	Krec *total_h, *total_ing = NULL ;
+	int seq_l = 0, l_count = 0, l_control = 0, flag = 0, max = 0;															//loopcount实际上数Krec的数量
+	seq_l = strlen(seq)-k_mer+1;
+	total_h = (Krec*)malloc(sizeof(Krec)*(seq_l+1)*2);
+	total_ing = total_h;
+	(*total_ing).k_m = NULL;
+	while (seq_l) 
+	{
+		strncpy(_tmp, seq_ing, k_mer);
+		*(_tmp + k_mer )= '\0';
+		for (l_control = 0,total_ing=total_h,flag=0; l_control < l_count; l_control++)
+		{
+			if (strcmp(_tmp, (*total_ing).k_m))
+			{
+				total_ing++;
+				continue;
+			}
+			else
+			{
+				(*total_ing).k_count++;
+				flag = 1;
+				max = (*total_ing).k_count > max ? (*total_ing).k_count : max;
+				break;
+			}
+		}
+		if (flag == 0)
+		{
+			(*total_ing).k_m = (char*)malloc(k_mer + 1);
+			strcpy((*total_ing).k_m, _tmp);
+			(*total_ing).k_count = 1;
+			l_count++;
+		}
+		seq_l--;
+		seq_ing++;
+	}
+	/*正向处理完毕
+	使用函数反向重新运行一次*/
+	extern char*r_comp(char*, int);
+	char*r_seq =NULL;
+	r_seq = r_comp(seq, strlen(seq));
+	/*check1
+	printf("name is %s\nreverse is %s\n",name, r_seq);
+	system("pause");
+	check1*/
+	seq_l = strlen(seq) - k_mer + 1;
+	total_ing = total_h;//重新初始化
+	while (seq_l)
+	{
+		strncpy(_tmp, r_seq, k_mer);
+		for (l_control = 0, total_ing = total_h, flag = 0; l_control < l_count; l_control++)
+		{
+			if (strcmp(_tmp, (*total_ing).k_m))
+			{
+				total_ing++;
+				continue;
+			}
+			else
+			{
+				(*total_ing).k_count++;
+				flag = 1;
+				max = (*total_ing).k_count > max ? (*total_ing).k_count : max;
+				break;
+			}
+		}
+		if (flag == 0)
+		{
+			(*total_ing).k_m = (char*)malloc(k_mer + 1);
+			strcpy((*total_ing).k_m, _tmp);
+			(*total_ing).k_count = 1;
+			l_count++;
+		}
+		seq_l--;
+		r_seq++;
+	}
+	/*check2
+	total_ing = total_h;
+	printf("max is %d", max);
+	int all = 0;
+	for (l_control = 0; l_control < l_count; l_control++)
+	{
+		printf("%s\t%d\r\n", (*total_ing).k_m, (*total_ing).k_count);
+		all += (*total_ing).k_count;
+		total_ing++;
+	}
+	printf("all=%d\n",all);
+	check2*/
+	total_ing = total_h;
+	for (l_control = 0; l_control < l_count; l_control++)
+	{
+		if ((*total_ing).k_count == max)
+		{
+			fprintf(out,"%s\t%d\r\n", (*total_ing).k_m, (*total_ing).k_count);
+		}
+		total_ing++;
+	}
+	return 0;
+}
