@@ -1,0 +1,58 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+#include "structure_use.h"
+/*处理directory信息
+处理输入参数（将来）
+打开文件*/
+int main(int argc,char *argv[])
+{
+	const int add_s=strlen(argv[0]);                             //目录长度，用于申请临时内存
+	int l_c = 1,seq_count=0;												 //loop_control
+	char add[15] = { '\0' };									 //其实应该叫name吧
+	char*dir = NULL, *in_dir = NULL, *out_dir = NULL;
+	dir = (char*)malloc(add_s + 1);
+	strcpy(dir, argv[0]);
+	char in_c = '\0';
+	char *trash = (char*)malloc(1);
+	for (l_c = add_s, in_c = *(dir + l_c - 1); in_c != '\\'; l_c--)
+	{
+		in_c = *(dir + l_c - 2);
+		*(dir + l_c - 1) = '\0';
+	}//*dir保存当前工作目录
+	printf("the current directory is %s\n",dir);
+	l_c = 0;
+	while (!l_c)
+	{
+		printf("enter input filename no more than 15chars\n");
+		gets_s(add);											//注意gets_s会舍弃最后一个\n换行符
+		if (add[0] == '\0')
+		{
+			strcpy(add, "target.fas");							//默认taget.fas
+		}
+		printf("the input file would be %s affirmed? 1/0\n",add);
+		scanf_s("%d", &l_c);
+		getc(stdin);
+
+	}
+	in_dir = (char*)malloc(strlen(dir) + strlen(add) + 1);
+	out_dir = (char*)malloc(strlen(dir) + 10);
+	strcpy(out_dir, dir);
+	strcat(out_dir, "out.fas");
+	strcpy(in_dir,dir);
+	strcat(in_dir, add);
+	free((void*)dir);
+	dir = NULL;                                                 //消除dir这个指针
+	typedef FILE* F_p;
+	F_p in_seq=NULL, out_seq=NULL;
+	in_seq=fopen(in_dir,"r");				//if(in_seq==NULL){printf("fail to open source file");system("pause");return0;}
+	out_seq = fopen(out_dir, "w");
+	extern Fas* autosearch(F_p, F_p,int*);
+	Fas* total_seq;
+	total_seq = autosearch(in_seq, out_seq,&seq_count);
+	fclose(in_seq);
+	fclose(out_seq);
+	system("pause");
+	return 0;
+}
