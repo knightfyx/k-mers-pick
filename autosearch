@@ -1,0 +1,85 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+#include "structure_use.h"
+/*从main中得到文件指针
+剥离出序列
+不是最优版本不允许出现换行
+序列要求小于7k*/
+Fas *autosearch(FILE*in, FILE*out,int*seq_count)
+{
+	char _ctr = '\0';
+	int l_c = 0;												//loop controler
+	Fas *head=NULL,*n1=NULL,*n2=NULL;
+	char tmp[7000];
+	while (_ctr = fgetc(in))
+	{
+		if (_ctr == '>')
+		{
+			if (feof(in))
+			{
+				break;
+			}
+			n1 = (Fas*)malloc(sizeof(Fas));
+			fgets((*n1).name, 27, in);
+			if ((*n1).name[strlen((*n1).name)-1] != '\n')
+			{
+				(*n1).name[strlen((*n1).name)] = '\r';
+				(*n1).name[strlen((*n1).name) + 1] = '\n';
+				(*n1).name[strlen((*n1).name) + 2] = '\0';
+				while ((_ctr = fgetc(in)) != '\n');
+			}
+			for (l_c = 0; l_c < 6998; l_c++)
+			{
+				if ((_ctr = fgetc(in)) == 'a' || _ctr == 't' || _ctr == 'c' || _ctr == 'g' || _ctr == 'A' || _ctr == 'T' || _ctr == 'C' || _ctr == 'G')
+				{
+					tmp[l_c] = _ctr;
+				}
+				else if (_ctr == '\r' || _ctr == '\n' || feof(in))									//要求序列中不要出现换行
+				{
+					tmp[l_c] = '\0';
+					break;
+				}
+				else 
+				{
+					printf("unexpected character happened on %s at %d as %c\n", (*n1).name, l_c, _ctr);
+				}
+			}
+			_strupr(tmp);//全部变成大写
+			(*seq_count)++;
+			(*n1).seq = (char*)malloc(strlen(tmp) + 1);
+			strcpy((*n1).seq, tmp);
+			if (*seq_count == 1)																			//这个seq_count计数是从1开始
+			{
+				head = n1;
+				n2 = n1;
+			}
+			else
+			{
+				(*n2).lnk = n1;
+				n2 = n1;
+			}
+		}
+		else
+		{
+			printf("dropped char as %c\n", _ctr);
+		}
+		if (feof(in))
+		{
+			break;
+		}
+	}
+	extern int seq_process(FILE*, Fas*);
+	(*n1).lnk = NULL;
+	int check = 0;
+	/*check*/
+	printf("here\n");
+	printf("%s%s\n", (*head).name, (*head).seq);
+	printf("%s%s", (*n1).name, (*n1).seq);
+	system("pause");
+	/*check*/
+	check=seq_process(out, head);
+	printf("total number is %d %d", *seq_count, check);
+	return head;
+} 
