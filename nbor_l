@@ -1,0 +1,130 @@
+//建立群，输入一个字符串和一个距离值，输出字符串数组
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+#include<math.h>
+//记得返回值是新的tail_count
+//三种情况：正常序列、只剩一个字符、没有错误匹配
+char**nbor_l(char*seq, int mis, int*amount)//依次是：序列、数量、总量的指针（为了返回总量）,需要输出两个值，序列空间和序列总量，别忘了！！
+{
+	if(mis==0)//没有错误匹配：返回原序列
+	{
+		char **ss = (char**)malloc(4);
+		*amount = 1;
+		ss = &seq;
+		return ss;
+		//一旦传过来的seq被free掉，ss就会变成野指针，不能再调用了一定要注意啊
+	}
+	int len = strlen(seq);//字符串的长度
+	int loop_a = 0, loop_b = 0;
+	char s_c = '\0';
+	if (len == 1)//只剩一个字符：返回ATCG的二维数组
+	{
+		char**ss = (char**)malloc(20), **ss_ing = ss;//定义时候多留一个指针的空间以防止ss_ing变成野指针
+		char*s = NULL;
+		for (loop_a = 0; loop_a < 4; loop_a++)
+		{
+			s = (char*)malloc(2);
+			*(s + 1) = '\0';
+			switch(loop_a)
+			{
+			case 0:s_c = 'A'; break;
+			case 1:s_c = 'T'; break;
+			case 2:s_c = 'C'; break;
+			case 3:s_c = 'G'; break;
+			}
+			*s = s_c;
+			ss_ing = &s;
+			ss_ing++;
+			//a=&b和*a=b两个有很大不同，这里只能使用a=&b因为ss的指向的指针还没有定义过
+		}
+		*amount = 4;
+		return ss;
+	}
+	else//正常序列：三步走1.分两种情况把末尾去掉调用自己2.根据字符是否相同叠合3.free上级指针，返回自己的空间
+	{
+		char*seq_n = (char*)malloc(len);
+		strncpy(seq_n, seq, len - 1);
+		int count_0 = 0, count_1 = 0;
+		char**ss_0 = nbor_l(seq_n, mis, &count_0);//0表示相同
+		char**ss_1 = nbor_l(seq_n, mis - 1, &count_1);//1表示不同,这两个是第一步，调用自己
+		int mark = 0, count = 0;
+		char**ss_n = (char**)malloc(4 * (3 * count_1 + count_0 + 1));
+		char**ss_ing = NULL, **ss_ing_n =ss_n;//这两个记得初始化
+		char*_tmp = NULL;
+		for (loop_a = 0; loop_a < 4; loop_a++)
+		{
+			switch (loop_a)
+			{
+			case 0:s_c = 'A'; break;
+			case 1:s_c = 'T'; break;
+			case 2:s_c = 'C'; break;
+			case 3:s_c = 'G'; break;
+			}
+			mark = (s_c == *(seq + len - 1)) ? 0 : 1;
+			if (mark)
+			{
+				ss_ing = ss_1;
+				for (loop_b = 0; loop_b < count_1; loop_b++)
+				{
+					_tmp = (char*)malloc(len + 2);
+					strcpy(_tmp, *ss_ing);
+					*(_tmp + len) = s_c;
+					ss_ing_n = &_tmp;
+					ss_ing_n++;
+					count++;
+				}
+			}
+			else 
+			{
+				ss_ing = ss_0;
+				for (loop_b = 0; loop_b < count_0; loop_b++)
+				{
+					_tmp = (char*)malloc(len + 2);
+					strcpy(_tmp, *ss_ing);
+					*(_tmp + len) = s_c;
+					ss_ing_n = &_tmp;
+					ss_ing_n++;
+					count++;
+				}
+
+			}
+
+		}
+		*amount = count;
+		//free掉上个函数返回的东西防止资源浪费
+		ss_ing = ss_0;
+		//check1
+		printf("newly dropped as belows/n");
+		//check1
+		for (loop_a = 0; loop_a < count_0; loop_a++)
+		{
+			//check2
+			printf("%s\n", *ss_ing);
+			//check2
+			free((void*)(*ss_ing));
+			ss_ing++;
+		}
+		free((void*)ss_0);
+		ss_ing = ss_1;
+		for (loop_a = 0; loop_a < count_1; loop_a++)
+		{
+			free((void*)(*ss_ing));
+			ss_ing++;
+		}
+		free((void*)ss_1);
+		//check3
+		ss_ing = ss_n;
+		printf("this sequences are\n");
+		for (loop_a = 0; loop_a < count; loop_a++)
+		{
+				
+			printf("%s\n", *ss_ing);
+			ss_ing++;
+				
+		}
+		//check3
+		return ss_n;
+	}
+}
