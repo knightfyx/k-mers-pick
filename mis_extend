@@ -1,0 +1,139 @@
+//带有原序列不存在的短序列motif
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+#include"structure_use.h"
+//***记得返回值是新的tail群和tail-count
+S_ez** mis_extend(S_ez**tail, int k_mer, int*tail_count)
+{
+	S_ez** _tail_neo = (S_ez**)malloc(sizeof(S_ez*)*(*tail_count + 1)), **tail_ing = _tail_neo;//新的尾指针群
+	int _tail_count_neo = 0;//新的尾指针计数器
+	int loop_a = 0, loop_b = 0, loop_c = 0, count = 0, exc = 0, lim = *tail_count;//循环控制和序列计数
+	char *_tmp = (char*)malloc(k_mer + 1);
+	*(_tmp + k_mer) = '\0';
+	S_ez*head = (S_ez*)malloc(8);
+	S_ez*_tmp_s = NULL;//取tail组字符串用的
+	S_ez*_tmp_s1 = NULL, *_tmp_s2 = NULL;//这两个是加字符串用的
+	char**_tmp_nb = NULL;
+	char _tmp_c = '\0';
+	int mis = 0;
+	/*提示
+	struct S_ez
+{
+	char n;
+	S_ez*_p[4];			//下面四个字符的指针组成的数组,认定为0-A,1-T,2-C,3-G.
+	S_ez*_p_r;			//回溯至上一个字符
+	int k_count;
+};  */
+	(*head).n = 'H';
+	(*head)._p_r = NULL;
+	for (; loop_a < 4; loop_a++)
+	{
+		(*head)._p[loop_a] = NULL;
+	}
+	extern char**nbor_l(char*, int, int*);//计算邻居值，返回二维string指针,还有string总数别忘了
+	extern int Comb(int, int);
+	printf("plz enter mismatch value\n");
+	scanf("%d", mis);
+	getchar();
+	while (*tail_count)
+	{
+		_tmp_s = *tail;//记得在最后递增，别忘了
+		loop_a = k_mer;
+		count = (*_tmp_s).k_count;
+		//首先取出序列
+		while (loop_a)
+		{
+			*(_tmp + loop_a - 1) = (*_tmp_s).n;
+			_tmp_s = (*_tmp_s)._p_r;
+			loop_a--;
+		}
+		_tmp_nb = nbor_l(_tmp, mis, &loop_a);//取得序列后将它们放进新组中
+		//check1
+		printf("nb seqs are\n");
+		char**_tmp_nb_test = _tmp_nb;
+		for (loop_b = loop_a; loop_b > 0; loop_b--)
+		{
+			printf("%s\n", *_tmp_nb_test);
+			_tmp_nb_test++;
+		}
+		//check1
+		while (loop_a)
+		{
+			_tmp_s1 = head;								//上轮留下的指针
+			_tmp_s2 = NULL;								//本次检索的指针
+			for (loop_b = 0; loop_b < k_mer; loop_b++)
+			{
+				_tmp_c = *(*_tmp_nb + loop_b);
+				switch (_tmp_c)
+				{
+				case'A': {
+					exc = 0;
+					break;
+				}
+				case'T': {
+					exc = 1;
+					break;
+				}
+				case'C': {
+					exc = 2;
+					break;
+				}
+				case'G': {
+					exc = 3;
+					break;
+				}
+				}
+				_tmp_s2 = (*_tmp_s1)._p[exc];
+				if (_tmp_s2 != NULL)
+				{
+					(*_tmp_s2).k_count += count;
+					_tmp_s1 = _tmp_s2;
+				}
+				//查有此链，进行操作，下面是查无此链要另行新建
+				else
+				{
+					(*_tmp_s1)._p[exc] = (S_ez*)malloc(sizeof(S_ez));
+					_tmp_s2 = (*_tmp_s1)._p[exc];
+					(*_tmp_s2)._p_r = _tmp_s1;
+					(*_tmp_s2).n = _tmp_c;
+					for (loop_c = 0; loop_c < 4; loop_c++)
+					{
+						(*_tmp_s2)._p[loop_c] = NULL;
+					}
+					(*_tmp_s2).k_count = count;
+					if (loop_b == k_mer - 1)
+					{
+						if (_tail_count_neo > lim - 2)
+						{
+							lim += 100;
+							_tail_neo = (S_ez**)realloc((void*)_tail_neo, sizeof(S_ez*)*lim);
+							tail_ing = _tail_neo + _tail_count_neo;
+						}
+						/*check
+						_tmp_check = _tmp_s2;
+						for (loop_b = 0; loop_b < k_mer; loop_b++)
+						{
+							*(_print_tmp + k_mer - 1 - loop_b) = (*_tmp_check).n;
+							_tmp_check = (*_tmp_check)._p_r;
+						}
+						printf("%s\t%d\r\n", _print_tmp, 0);
+						check*/
+						*tail_ing = _tmp_s2;
+						tail_ing++;
+						_tail_count_neo++;
+					}
+					_tmp_s1 = _tmp_s2;
+					//这里默认不是所有k-mer的计数都是1，因此在新建时不进行max检查
+				}
+			}
+			_tmp_nb++;
+			loop_a--;
+		}
+		tail++;
+		*tail_count--;
+	}
+	*tail_count = _tail_count_neo;
+	return _tail_neo;
+}
