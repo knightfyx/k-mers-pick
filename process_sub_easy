@@ -1,0 +1,232 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+#include"structure_use.h"
+int process_sub_easy(FILE*out, char*name, char*seq, int k_mer)
+{
+	fputs(name, out);
+	fputs("\r\n", out);
+	char *seq_ing = seq, *_tmp = seq, _tmp_c = '\0';
+	S_ez*head, *_tmp_s1 = NULL, *_tmp_s2 = NULL, *_tmp_check = NULL, **_check_tail = NULL;
+	S_ez**tail = (S_ez**)malloc(sizeof(S_ez*) * 1001), **tail_ing = tail;				//这里只给了tail 100的空间，将来应该调整；
+	int loop_a = 0, loop_b = 0, exc = 0, seq_l = strlen(seq) - k_mer + 1, max = 0, tail_count = 0, limit = 1;
+	char*_print_tmp = (char*)malloc(k_mer + 1);
+	*(_print_tmp + k_mer) = '\0';
+	head = (S_ez*)malloc(sizeof(S_ez));
+	//初始化head
+	(*head)._p_r = NULL;
+	(*head).n = 'H';
+	for (loop_b = 0; loop_b < 4; loop_b++)
+	{
+		(*head)._p[loop_b] = NULL;
+	}
+	(*head).k_count = 0;
+	//初始化结束
+	while (seq_l)
+	{
+		_tmp = seq_ing;
+		_tmp_s1 = head;								//上轮留下的指针
+		_tmp_s2 = NULL;								//本次检索的指针
+		for (loop_a = 0; loop_a < k_mer;loop_a++)
+		{
+			_tmp_c = *_tmp;
+			switch (_tmp_c)
+			{
+			case'A': {
+						exc = 0;
+						break;
+					 }
+			case'T': {
+						exc = 1;
+						break;
+					}			
+			case'C': {
+						exc = 2;
+						break;
+					}			
+			case'G': {
+						exc =3;
+						break;
+					}
+			}
+			_tmp_s2 = (*_tmp_s1)._p[exc];
+			if (_tmp_s2!=NULL)
+			{
+				(*_tmp_s2).k_count++;
+				if (loop_a == k_mer - 1)
+				{
+					max = (*_tmp_s2).k_count > max ? (*_tmp_s2).k_count : max;
+					/*check
+					_tmp_check = _tmp_s2;
+					for (loop_b = 0; loop_b < k_mer; loop_b++)
+					{
+						*(_print_tmp + k_mer - 1 - loop_b) = (*_tmp_check).n;
+						_tmp_check = (*_tmp_check)._p_r;
+					}
+					printf("%s\t%d\t%d\r\n", _print_tmp, (*_tmp_s2).k_count,max);
+					check*/
+				}
+				_tmp_s1 = _tmp_s2;
+			}
+			//查有此链，进行操作，下面是查无此链要另行新建
+			else
+			{
+				(*_tmp_s1)._p[exc]= (S_ez*)malloc(sizeof(S_ez));
+				_tmp_s2 = (*_tmp_s1)._p[exc];
+				(*_tmp_s2)._p_r = _tmp_s1;
+				(*_tmp_s2).n = _tmp_c;
+				for (loop_b = 0; loop_b < 4; loop_b++)
+				{
+					(*_tmp_s2)._p[loop_b] = NULL;
+				}
+				(*_tmp_s2).k_count = 1;
+				if (loop_a == k_mer - 1)
+				{
+					if (tail_count > 1000*limit)
+					{
+						limit++;
+						tail = (S_ez**)realloc((void*)tail, sizeof(S_ez*)*limit * 1001);
+						tail_ing = tail + tail_count;
+					}
+					/*check
+					_tmp_check = _tmp_s2;
+					for (loop_b = 0; loop_b < k_mer; loop_b++)
+					{
+						*(_print_tmp + k_mer - 1 - loop_b) = (*_tmp_check).n;
+						_tmp_check = (*_tmp_check)._p_r;
+					}
+					printf("%s\t%d\r\n", _print_tmp, 0);
+					check*/
+					*tail_ing = _tmp_s2;
+					tail_ing++;
+					tail_count++;
+				}
+				_tmp_s1 = _tmp_s2;
+				//这里默认不是所有k-mer的计数都是1，因此在新建时不进行max检查
+			}
+			_tmp++;
+		}
+		seq_l--;
+		seq_ing++;
+	}
+	
+	extern char*r_comp(char*, int);
+	char*r_seq = NULL;
+	r_seq = r_comp(seq, strlen(seq));
+	//反向再运行一次，哪些需要初始化，哪些不需要？
+	seq_ing = r_seq;
+	_tmp = r_seq;
+	seq_l = strlen(r_seq) - k_mer + 1;
+	/*break point
+	system("pause");
+	break point*/
+	while (seq_l)
+	{
+		_tmp = seq_ing;
+		_tmp_s1 = head;								
+		_tmp_s2 = NULL;						
+		for (loop_a = 0; loop_a < k_mer; loop_a++)
+		{
+			_tmp_c = *_tmp;
+			switch (_tmp_c)
+			{
+			case'A': {
+						exc = 0;
+						break;
+					}
+			case'T': {
+						exc = 1;
+						break;
+					}
+			case'C': {
+						exc = 2;
+						break;
+					}
+			case'G': {
+						exc = 3;
+						break;
+					}
+			}
+			_tmp_s2 = (*_tmp_s1)._p[exc];
+			if (_tmp_s2!=NULL)
+			{
+				(*_tmp_s2).k_count++;
+				if (loop_a == k_mer - 1)
+				{
+					max = (*_tmp_s2).k_count > max ? (*_tmp_s2).k_count : max;
+					/*check
+					_tmp_check = _tmp_s2;
+					for (loop_b = 0; loop_b < k_mer; loop_b++)
+					{
+						*(_print_tmp + k_mer - 1 - loop_b) = (*_tmp_check).n;
+						_tmp_check = (*_tmp_check)._p_r;
+					}
+					printf("%s\t%d\t%d\r\n", _print_tmp, (*_tmp_s2).k_count, max);
+					check*/
+				}
+				_tmp_s1 = _tmp_s2;
+			}
+			else
+			{
+				(*_tmp_s1)._p[exc] = (S_ez*)malloc(sizeof(S_ez));
+				_tmp_s2 = (*_tmp_s1)._p[exc];
+				(*_tmp_s2)._p_r = _tmp_s1;
+				(*_tmp_s2).n = _tmp_c;
+				for (loop_b = 0; loop_b < 4; loop_b++)
+				{
+					(*_tmp_s2)._p[loop_b] = NULL;
+				}
+				(*_tmp_s2).k_count = 1;
+				if (loop_a == k_mer - 1)
+				{
+					if (tail_count > 1000 * limit)
+					{
+						limit++;
+						tail = (S_ez**)realloc((void*)tail, sizeof(S_ez*)*limit * 1001);
+						tail_ing = tail + tail_count;
+					}
+					*tail_ing = _tmp_s2;
+					tail_ing++;
+					tail_count++;
+					/*check
+					_tmp_check = _tmp_s2;
+					for (loop_b = 0; loop_b < k_mer; loop_b++)
+					{
+						*(_print_tmp + k_mer - 1 - loop_b) = (*_tmp_check).n;
+						_tmp_check = (*_tmp_check)._p_r;
+					}
+					printf("%s\t%d\r\n", _print_tmp, 0);
+					check*/
+				}
+				_tmp_s1 = _tmp_s2;
+			}
+			_tmp++;
+		}
+		seq_l--;
+		seq_ing++;
+	}
+	//以下这种方法会把序列中没有的也揪出来
+	extern S_ez**mis_extend(S_ez**, int, int*);	//参数从前至后依次为尾指针群、头指针、k_mer和尾指针计数器
+	tail = mis_extend(tail, k_mer, &tail_count);
+	/*check*/
+
+	/*check*/
+	//到此为止
+	_tmp_s1 = NULL;
+	_tmp_s2 = NULL;
+	for (loop_a = 0; loop_a < tail_count; loop_a++)
+	{
+		if ((**(tail + loop_a)).k_count == max)
+		{
+			_tmp_s2 = *(tail + loop_a);
+			for (loop_b = 0; loop_b < k_mer; loop_b++)
+			{
+				*(_print_tmp + k_mer - 1 - loop_b) = (*_tmp_s2).n;
+				_tmp_s2 = (*_tmp_s2)._p_r;
+			}
+			fprintf(out, "%s\t%d\r\n", _print_tmp, max);
+		}
+	}
+	return 0;
+}
