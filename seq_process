@@ -1,0 +1,46 @@
+/*接收序列，分给process_sub处理
+接受k值*/
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<cstring>
+#include "structure_use.h"
+int seq_process(FILE*out, Fas*head)
+{
+	int count = 0, k_mer = 0;
+	extern int process_sub_easy(FILE*, char*, char*,int);
+	Fas*_ing=head;
+	printf("input k-mer\n");
+	scanf("%d", &k_mer);
+	getc(stdin);
+	fprintf(out, "the k_mer is %d\r\n", k_mer);
+	while(_ing!=NULL)
+	{
+		process_sub_easy(out, (*_ing).name, (*_ing).seq,k_mer);
+		_ing = (*_ing).lnk;
+		count++;
+	}
+	printf("the k_mer %d has done want more?1/0\n", k_mer);
+	int ctr=0;
+	scanf("%d", &ctr);
+	getc(stdin);
+	while (ctr)
+	{
+		count = 0;
+		_ing = head;
+		printf("input k-mer\n");
+		scanf("%d", &k_mer);
+		getc(stdin);
+		fprintf(out, "the k_mer is %d\r\n", k_mer);
+		while (_ing != NULL)
+		{ 
+			process_sub_easy(out, (*_ing).name, (*_ing).seq, k_mer);
+			_ing = (*_ing).lnk;
+			count++;
+		}
+		printf("the k_mer %d has done want more?1/0\n", k_mer);
+		scanf("%d", &ctr);
+		getc(stdin);
+	}
+	return count;
+}
